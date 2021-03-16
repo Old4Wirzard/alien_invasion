@@ -1,6 +1,7 @@
 import sys
 import pygame
 from bullet import Bullet
+from alien import Alien
 
 def check_events(ai_settings, screen, ship, bullets):
 	#Watch for keyboard and mouse events.
@@ -29,7 +30,7 @@ def check_keydown_events(event, ai_settings, screen, ship, bullets):
 def fire_bullet(ai_settings, screen, ship, bullets):
 	#Create a new bullet and add it to the bullets group
 		new_bullet = Bullet( ai_settings, screen, ship)
-		bullets.add(new_bullet)		
+		bullets.add(new_bullet)
 def check_keyup_events(event, ship):
 	#Stop moving both sides
 	if event.key == pygame.K_RIGHT:
@@ -40,7 +41,22 @@ def check_keyup_events(event, ship):
 		ship.moving_up = False
 	elif event.key == pygame.K_DOWN:
 		ship.moving_down = False
-def update_screen(ai_settings, screen, ship, alien,  bullets):
+def create_fleet(ai_settings, screen, aliens):
+	#Create a full fleet of aliens."""
+	# Create an alien and find the number of aliens in a row.
+	# Spacing between each alien is equal to one alien width
+	alien = Alien(ai_settings, screen)
+	alien_width = alien.rect.width
+	available_space_x = ai_settings.screen_width - 2 * alien_width
+	number_aliens_x = int(available_space_x / (2 * alien_width))
+	#Create the first row of aliens
+	for alien_number in range(number_aliens_x):
+		#Create an alien and place it in the row
+		alien = Alien(ai_settings, screen)
+		alien.x = alien_width + 2 * alien_width * alien_number
+		alien.rect.x  = alien.x
+		alien.add(aliens)
+def update_screen(ai_settings, screen, ship, aliens, bullets):
 	#Update images on the screen and flip to the new screen
 	screen.fill(ai_settings.bg_color)
 	ship.blitme()
@@ -54,4 +70,3 @@ def update_bullets(bullets):
 	for bullet in bullets.copy():
 		if bullet.rect.bottom <= 0:
 				bullets.remove(bullet)
-		
