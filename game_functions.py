@@ -3,6 +3,7 @@ import pygame
 from bullet import Bullet
 from alien import Alien
 from star import Star
+from raindrop import Raindrop
 
 def check_events(ai_settings, screen, ship, bullets):
 	#Watch for keyboard and mouse events.
@@ -75,10 +76,11 @@ def create_fleet(ai_settings, screen, ship, aliens):
 		for alien_number in range(number_aliens_x):
 			#Create an alien and place it in the row
 			create_alien(ai_settings, screen, aliens, alien_number, row_number)
-def update_screen(ai_settings, screen, ship, aliens, bullets, stars):
+def update_screen(ai_settings, screen, ship, aliens, bullets, stars, raindrops):
 	#Update images on the screen and flip to the new screen
 	screen.fill(ai_settings.bg_color)
 	stars.draw(screen)
+	raindrops.draw(screen)
 	aliens.draw(screen)
 	ship.blitme()
 	#Redraw all bullets behind ship and aliens
@@ -106,3 +108,13 @@ def change_fleet_direction(ai_settings, aliens):
 	for alien in aliens.sprites():
 		alien.rect.y += ai_settings.fleet_drop_speed
 	ai_settings.fleet_direction *= -1
+def create_raindrop(ai_settings, screen, raindrops):
+	for raindrop in range(30):
+		raindrop = Raindrop(ai_settings, screen)
+		raindrop.add(raindrops)
+def update_raindrops(ai_settings, screen, raindrops):
+	for raindrop in raindrops:
+		raindrop.update()
+		if raindrop.check_edge():
+			raindrops.empty()
+			create_raindrop(ai_settings, screen, raindrops)
