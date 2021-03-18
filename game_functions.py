@@ -2,6 +2,7 @@ import sys
 import pygame
 from bullet import Bullet
 from alien import Alien
+from star import Star
 
 def check_events(ai_settings, screen, ship, bullets):
 	#Watch for keyboard and mouse events.
@@ -41,6 +42,10 @@ def check_keyup_events(event, ship):
 		ship.moving_up = False
 	elif event.key == pygame.K_DOWN:
 		ship.moving_down = False
+def create_stars_background(ai_settings, screen, stars):
+	while (len(stars) < 300):
+		star = Star(ai_settings, screen)
+		star.add(stars)
 def get_number_aliens_x(ai_settings, alien_width):
 	#Determine the number of aliens that fit in a row
 	available_space_x = ai_settings.screen_width - 2 * alien_width
@@ -70,18 +75,34 @@ def create_fleet(ai_settings, screen, ship, aliens):
 		for alien_number in range(number_aliens_x):
 			#Create an alien and place it in the row
 			create_alien(ai_settings, screen, aliens, alien_number, row_number)
-			print(row_number)
-def update_screen(ai_settings, screen, ship, aliens, bullets):
+def update_screen(ai_settings, screen, ship, aliens, bullets, stars):
 	#Update images on the screen and flip to the new screen
 	screen.fill(ai_settings.bg_color)
-	ship.blitme()
+	stars.draw(screen)
 	aliens.draw(screen)
+	ship.blitme()
 	#Redraw all bullets behind ship and aliens
 	for bullet in bullets.sprites():
 		bullet.draw_bullet()
+def update_aliens(ai_settings, aliens):
+	#Check if the fleet is at an edge and then update the postions of all aliens in the fleet
+	check_fleet_edges(ai_settings, aliens)
+	#Update the postions of all aliens in the fleet
+	aliens.update()
 def update_bullets(bullets):
 	bullets.update()
 	# Get rid of bullets that have disappeared.
 	for bullet in bullets.copy():
 		if bullet.rect.bottom <= 0:
 				bullets.remove(bullet)
+def check_fleet_edges(ai_settings, aliens):
+	#Respond appropriately if any aliens have reached an edge
+	for alien in aliens.sprites():
+		if alien.check_edge():
+			change_fleet_direction(ai_settings, aliens)
+			break
+def change_fleet_direction(ai_settings, aliens):
+	#Drop the entire fleet and change the fleet's direction
+	for alien in aliens.sprites():
+		alien.rect.y += ai_settings.fleet_drop_speed
+	ai_settings.fleet_direction *= -1

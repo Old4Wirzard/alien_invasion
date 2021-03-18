@@ -12,9 +12,12 @@ def run_game():
 	ship = Ship(ai_settings, screen)
 	#Make an alien
 	#alien = Alien(ai_settings, screen)
-	#Make a group to store bullets in
+	#Make a group to store bullets, aliens and stars in
 	bullets = Group()
 	aliens = Group()
+	stars = Group()
+	#Display stars
+	game_functions.create_stars_background(ai_settings, screen, stars)
 	#Create the fleet of aliens
 	game_functions.create_fleet(ai_settings, screen, ship, aliens)
 	#Start the main loop for the game
@@ -24,7 +27,8 @@ def run_game():
 		game_functions.check_events(ai_settings, screen, ship, bullets)
 		ship.update()
 		game_functions.update_bullets(bullets)
-		game_functions.update_screen(ai_settings, screen, ship, aliens, bullets)
+		game_functions.update_aliens(ai_settings, aliens)
+		game_functions.update_screen(ai_settings, screen, ship, aliens, bullets, stars)
 		#Make the most recently drawn screen visible.
 		pygame.display.flip()
 run_game()
