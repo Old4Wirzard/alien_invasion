@@ -18,5 +18,5 @@ class Raindrop(Sprite):
         self.rect.y = self.y
     def check_edge(self):
         screen_rect = self.screen.get_rect()
-        if self.rect.bottom > screen_rect.bottom:
+        if self.rect.top > screen_rect.bottom + 5:
             return True

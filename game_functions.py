@@ -4,6 +4,7 @@ from bullet import Bullet
 from alien import Alien
 from star import Star
 from raindrop import Raindrop
+from time import sleep
 
 def check_events(ai_settings, screen, ship, bullets):
 	#Watch for keyboard and mouse events.
@@ -86,17 +87,41 @@ def update_screen(ai_settings, screen, ship, aliens, bullets, stars, raindrops):
 	#Redraw all bullets behind ship and aliens
 	for bullet in bullets.sprites():
 		bullet.draw_bullet()
-def update_aliens(ai_settings, aliens):
+def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
+	#Respond to ship being hit by alien
+	#Decrement ships_left
+	stats.ship_left -= 1
+	# Empty the list of aliens and bullets
+	aliens.empty()
+	bullets.empty()
+	#Create a new fleet and center the ship
+	create_fleet(ai_settings, screen, ship, aliens)
+	ship.center_ship()
+	#Pause
+	sleep(0.5)
+def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
 	#Check if the fleet is at an edge and then update the postions of all aliens in the fleet
 	check_fleet_edges(ai_settings, aliens)
 	#Update the postions of all aliens in the fleet
 	aliens.update()
-def update_bullets(bullets):
+	#Look for alien-ship collisions
+	if pygame.sprite.spritecollideany(ship, aliens):
+		ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+def update_bullets(ai_settings, screen, ship, aliens, bullets):
 	bullets.update()
 	# Get rid of bullets that have disappeared.
 	for bullet in bullets.copy():
 		if bullet.rect.bottom <= 0:
 				bullets.remove(bullet)
+	check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
+	#Respond to bullet-alien collisions
+	#Remove any bullets and aliens that have collided
+	collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+	if len(aliens) == 0:
+		#Destroy existing bullets and create new fleet
+		bullets.empty()
+		create_fleet(ai_settings, screen, ship, aliens)
 def check_fleet_edges(ai_settings, aliens):
 	#Respond appropriately if any aliens have reached an edge
 	for alien in aliens.sprites():
