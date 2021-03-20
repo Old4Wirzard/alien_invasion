@@ -6,7 +6,7 @@ from star import Star
 from raindrop import Raindrop
 from time import sleep
 
-def check_events(ai_settings, screen, ship, bullets):
+def check_events(ai_settings, screen, stats, play_button, ship, aliens, bullets):
 	#Watch for keyboard and mouse events.
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -15,6 +15,18 @@ def check_events(ai_settings, screen, ship, bullets):
 				check_keydown_events(event, ai_settings, screen, ship, bullets)
 			elif event.type == pygame.KEYUP:
 				check_keyup_events(event, ship)
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				mouse_x, mouse_y = pygame.mouse.get_pos()
+				check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y)
+def check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y):
+	#Start a new game when the player clicks Play
+	if play_button.rect.collidepoint(mouse_x, mouse_y):
+		stats.reset_stats()
+		stats.game_active = True
+		aliens.empty()
+		bullets.empty()
+		create_fleet(ai_settings, screen, ship, aliens)
+		ship.center_ship()
 def check_keydown_events(event, ai_settings, screen, ship, bullets):
 	if event.key == pygame.K_RIGHT:
 		# Move the ship to the right
@@ -77,7 +89,7 @@ def create_fleet(ai_settings, screen, ship, aliens):
 		for alien_number in range(number_aliens_x):
 			#Create an alien and place it in the row
 			create_alien(ai_settings, screen, aliens, alien_number, row_number)
-def update_screen(ai_settings, screen, ship, aliens, bullets, stars, raindrops):
+def update_screen(ai_settings, screen, stats, ship, aliens, bullets, stars, raindrops, play_button):
 	#Update images on the screen and flip to the new screen
 	screen.fill(ai_settings.bg_color)
 	stars.draw(screen)
@@ -87,18 +99,26 @@ def update_screen(ai_settings, screen, ship, aliens, bullets, stars, raindrops):
 	#Redraw all bullets behind ship and aliens
 	for bullet in bullets.sprites():
 		bullet.draw_bullet()
+	# Draw the play button if the game is inactive
+	if not stats.game_active:
+		play_button.draw_button()
+	#Make the most recently drawn screen visible.
+	pygame.display.flip()
 def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
 	#Respond to ship being hit by alien
 	#Decrement ships_left
-	stats.ship_left -= 1
-	# Empty the list of aliens and bullets
-	aliens.empty()
-	bullets.empty()
-	#Create a new fleet and center the ship
-	create_fleet(ai_settings, screen, ship, aliens)
-	ship.center_ship()
-	#Pause
-	sleep(0.5)
+	if stats.ship_left > 0:
+		stats.ship_left -= 1
+		#Empty the list of aliens and bullets
+		aliens.empty()
+		bullets.empty()
+		#Create a new fleet and center the ship
+		create_fleet(ai_settings, screen, ship, aliens)
+		ship.center_ship()
+		#Pause
+		#sleep(0.5)
+	else:
+		stats.game_active = False
 def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
 	#Check if the fleet is at an edge and then update the postions of all aliens in the fleet
 	check_fleet_edges(ai_settings, aliens)
@@ -107,6 +127,7 @@ def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
 	#Look for alien-ship collisions
 	if pygame.sprite.spritecollideany(ship, aliens):
 		ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+	check_aliens_bottom(ai_settings,stats, screen, ship, aliens, bullets)
 def update_bullets(ai_settings, screen, ship, aliens, bullets):
 	bullets.update()
 	# Get rid of bullets that have disappeared.
@@ -122,6 +143,13 @@ def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
 		#Destroy existing bullets and create new fleet
 		bullets.empty()
 		create_fleet(ai_settings, screen, ship, aliens)
+def check_aliens_bottom(ai_settings,stats, screen, ship, aliens, bullets):
+	#Check if any aliens have reached the bottom of the screen
+	screen_rect = screen.get_rect()
+	for alien in aliens:
+		if alien.rect.bottom >= screen_rect.bottom:
+			#Treat this the same as if the ship got hit
+			ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
 def check_fleet_edges(ai_settings, aliens):
 	#Respond appropriately if any aliens have reached an edge
 	for alien in aliens.sprites():
