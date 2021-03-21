@@ -5,6 +5,7 @@ import game_functions
 from pygame.sprite import Group
 from game_stats import GameStats
 from button import Button
+from scoreboard import Scoreboard
 
 def run_game():
 	#Initialize game and create a screen object.
@@ -29,17 +30,18 @@ def run_game():
 	pygame.display.set_caption("Alien Invasion")
 	#Make the Play button
 	play_button = Button(ai_settings, screen, 'Play')
-	#Create an instance to store game statistics
+	#Create an instance to store game statistics and create a scoreboard
 	stats = GameStats(ai_settings)
+	sb = Scoreboard(ai_settings, screen, stats)
 	#Display First screen
-	game_functions.update_screen(ai_settings, screen, stats,ship, aliens, bullets, stars, raindrops, play_button)
+	game_functions.update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, stars, raindrops, play_button)
 	#Start the main loop for the game.
 	while True:
-		game_functions.check_events(ai_settings, screen, stats, play_button, ship, aliens, bullets)
+		game_functions.check_events(ai_settings, screen, stats, play_button, sb,ship, aliens, bullets)
 		if stats.game_active:
 			ship.update()
-			game_functions.update_bullets(ai_settings, screen, ship, aliens, bullets)
+			game_functions.update_bullets(ai_settings, screen, stats, sb,ship, aliens, bullets)
 			game_functions.update_raindrops(ai_settings, screen, raindrops)
-			game_functions.update_aliens(ai_settings, stats, screen, ship,aliens, bullets)
-			game_functions.update_screen(ai_settings, screen, stats,ship, aliens, bullets, stars, raindrops, play_button)
+			game_functions.update_aliens(ai_settings, stats, screen, ship, aliens, bullets)
+			game_functions.update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, stars, raindrops, play_button)
 run_game()
