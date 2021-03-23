@@ -42,6 +42,6 @@ def run_game():
 			ship.update()
 			game_functions.update_bullets(ai_settings, screen, stats, sb,ship, aliens, bullets)
 			game_functions.update_raindrops(ai_settings, screen, raindrops)
-			game_functions.update_aliens(ai_settings, stats, screen, ship, aliens, bullets)
+			game_functions.update_aliens(ai_settings, stats, screen, sb, ship, aliens, bullets)
 			game_functions.update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, stars, raindrops, play_button)
 run_game()

@@ -10,6 +10,7 @@ def check_events(ai_settings, screen, stats, play_button, sb, ship, aliens, bull
 	#Watch for keyboard and mouse events.
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
+				write_high_score(stats)
 				sys.exit()
 			elif event.type == pygame.KEYDOWN:
 				check_keydown_events(event, ai_settings, screen, stats, sb,ship, bullets, aliens)
@@ -28,7 +29,7 @@ def star_playing(ai_settings, screen, ship, sb, stats, aliens, bullets):
 	ai_settings.initialize_dynamic_settings()
 	pygame.mouse.set_visible(False)
 	stats.reset_stats()
-	sb.prep_score()
+	sb.prep_images()
 	stats.game_active = True
 	aliens.empty()
 	bullets.empty()
@@ -48,6 +49,7 @@ def check_keydown_events(event, ai_settings, screen, stats, sb,ship, bullets, al
 	elif event.key == pygame.K_SPACE and len(bullets) < ai_settings.bullets_allowed:
 		fire_bullet(ai_settings, screen, ship, bullets)
 	elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
+		write_high_score(stats)
 		sys.exit()
 	elif event.key == pygame.K_p and not stats.game_active:
 		star_playing(ai_settings, screen, ship, sb, stats, aliens, bullets)
@@ -114,7 +116,7 @@ def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, stars, 
 		play_button.draw_button()
 	#Make the most recently drawn screen visible.
 	pygame.display.flip()
-def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
+def ship_hit(ai_settings, stats, screen, sb,ship, aliens, bullets):
 	#Respond to ship being hit by alien
 	#Decrement ships_left
 	if stats.ship_left > 0:
@@ -125,20 +127,22 @@ def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
 		#Create a new fleet and center the ship
 		create_fleet(ai_settings, screen, ship, aliens)
 		ship.center_ship()
+		#Update Scoreboard
+		sb.prep_ships()
 		#Pause
-		#sleep(0.5)
+		sleep(0.5)
 	else:
 		stats.game_active = False
 		pygame.mouse.set_visible(True)
-def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
+def update_aliens(ai_settings, stats, screen, sb,ship, aliens, bullets):
 	#Check if the fleet is at an edge and then update the postions of all aliens in the fleet
 	check_fleet_edges(ai_settings, aliens)
 	#Update the postions of all aliens in the fleet
 	aliens.update()
 	#Look for alien-ship collisions
 	if pygame.sprite.spritecollideany(ship, aliens):
-		ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
-	check_aliens_bottom(ai_settings,stats, screen, ship, aliens, bullets)
+		ship_hit(ai_settings, stats, screen, sb, ship, aliens, bullets)
+	check_aliens_bottom(ai_settings,stats, screen, sb, ship, aliens, bullets)
 def update_bullets(ai_settings, screen, stats, sb,ship, aliens, bullets):
 	bullets.update()
 	# Get rid of bullets that have disappeared.
@@ -154,18 +158,25 @@ def check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, 
 		for aliens in collisions.values():
 			stats.score += ai_settings.alien_points
 			sb.prep_score()
+		check_high_score(stats, sb)
 	if len(aliens) == 0:
-		#Destroy existing bullets and create new fleet
-		bullets.empty()
-		ai_settings.increase_speed()
-		create_fleet(ai_settings, screen, ship, aliens)
-def check_aliens_bottom(ai_settings,stats, screen, ship, aliens, bullets):
+		#New level
+		start_new_level(ai_settings, bullets, stats, sb, screen, aliens, ship)
+def start_new_level(ai_settings, bullets, stats, sb, screen, aliens, ship):
+	#Destroy existing bullets and create new fleet
+	bullets.empty()
+	ai_settings.increase_speed()
+	create_fleet(ai_settings, screen, ship, aliens)
+	#Increase level
+	stats.level += 1
+	sb.prep_level()
+def check_aliens_bottom(ai_settings,stats, screen, sb, ship, aliens, bullets):
 	#Check if any aliens have reached the bottom of the screen
 	screen_rect = screen.get_rect()
 	for alien in aliens:
 		if alien.rect.bottom >= screen_rect.bottom:
 			#Treat this the same as if the ship got hit
-			ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+			ship_hit(ai_settings, stats, screen, sb, ship, aliens, bullets)
 def check_fleet_edges(ai_settings, aliens):
 	#Respond appropriately if any aliens have reached an edge
 	for alien in aliens.sprites():
@@ -188,3 +199,11 @@ def update_raindrops(ai_settings, screen, raindrops):
 			raindrops.empty()
 			create_raindrop(ai_settings, screen, raindrops)
 			break
+def check_high_score(stats, sb):
+	#Check to see if there's a new high score
+	if stats.score > stats.high_score:
+		stats.high_score = stats.score
+		sb.prep_high_score()
+def write_high_score(stats):
+	with open('high_score.txt', 'w') as high_score_file:
+		high_score_file.write(str(stats.high_score))
